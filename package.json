@@ -2,14 +2,19 @@
   "name": "backendproject",
   "version": "1.0.0",
   "main": "index.js",
+  "type": "modules",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "nodemon scr/index.js"
   },
   "keywords": [
-    "javascit",
+    "javascript",
     "backend"
   ],
   "author": "Eesh Midha",
   "license": "ISC",
-  "description": ""
+  "description": "",
+  "devDependencies": {
+    "-": "^0.0.1",
+    "nodemon": "^3.1.4"
+  }
 }
