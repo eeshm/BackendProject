@@ -2,7 +2,7 @@
   "name": "backendproject",
   "version": "1.0.0",
   "main": "index.js",
-  "type": "modules",
+  "type": "module",
   "scripts": {
     "dev": "nodemon scr/index.js"
   },
@@ -15,6 +15,7 @@
   "description": "",
   "devDependencies": {
     "-": "^0.0.1",
-    "nodemon": "^3.1.4"
+    "nodemon": "^3.1.4",
+    "prettier": "^3.3.3"
   }
 }
