@@ -15,3 +15,12 @@ Backend with javascript
  1.Used higher order function in utils/asynchandler.js
  2.Utilit/asynchandler.js -->This asyncHandler function is useful for simplifying the error handling in asynchronous route handlers. Normally, without such a wrapper, you'd have to use try-catch blocks in every route handler to catch errors. This utility function automatically catches any errors and passes them to the next middleware
   -->
+
+
+<!-- npm packages used:
+1.mongoose 
+2.express
+3.mongoose-aggregate-paginate-v2
+4.bcrypt -- for password encryption
+5.jsonwebtoken
+ -->
