@@ -54,6 +54,8 @@ const userSchema = new Schema(
     }
 )
 
+
+//For password encryptio
 userSchema.pre("save",async function(next){              //we use pre hook from mongoose
     if(!this.isModified("password")) return next()
 
