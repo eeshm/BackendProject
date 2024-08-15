@@ -1,13 +1,13 @@
-//U  tility function for async handling
+//Utility function for async handling
 
 const asyncHandler=(requestHandler)=>{
     return (req,res,next)=>{
         Promise.resolve(requestHandler(req,res,next))
-        .catch((err)=>{next(err)})
+        .catch((err)=>next(err))
     }
 }
 
-export{ asyncHandler }
+export { asyncHandler }
 
 
 

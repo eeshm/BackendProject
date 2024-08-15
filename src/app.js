@@ -4,6 +4,7 @@ import cookieParser from "cookie-parser";
 
 
 const app = express()
+
 //cors configuration for cors imported from env 
 app.use(cors({
         origin:process.env.CORS_ORIGIN,
@@ -20,6 +21,18 @@ app.use(express.static("public")) //for storing images favicon in our public fol
 //for setting conf for cookie parser for securely accessing and storing cookies in browser
 app.use(cookieParser())
 
+ 
+
+
+
+
+
+//routes import 
+import userRouter from './routes/user.routes.js'
+
+
+//routes declaration (using middleware using (app.use))
+app.use("/api/v1/users",userRouter)
 
 
 export { app }
