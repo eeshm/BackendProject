@@ -1,4 +1,5 @@
 import {asyncHandler} from "../utils/asyncHandler.js"
+import {ApiError} from "../utils/ApiError.js"
 
 
 const registerUser = asyncHandler( async(req,res)=>{
@@ -14,7 +15,18 @@ const registerUser = asyncHandler( async(req,res)=>{
 
 
    const {fullName, username, email, password} =req.body
-   console.log("email: ",email)
+   console.log("email: ",email);
+
+   if(fullName===""){
+    throw new ApiError(400,"fullname is required ")
+   }
+
+   if(
+    [fullName,email,username,password].some((field)=>
+    field?.trim()==="")
+   ){
+    throw new ApiError(400,"All fields are required")
+   }
 })
 
 export {registerUser}
