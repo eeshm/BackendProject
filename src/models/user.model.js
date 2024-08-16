@@ -44,7 +44,7 @@ const userSchema = new Schema(
             type:String,
             required:[true,"Password is required"]
         },
-        refreshtoken:{
+        refreshToken:{
             type:String,
 
         }
@@ -56,10 +56,10 @@ const userSchema = new Schema(
 
 
 //For password encryptio
-userSchema.pre("save",async function(next){              //we use pre hook from mongoose
+userSchema.pre("save",async function(next){              //we use pre hook from mongoose to apply something before doing something
     if(!this.isModified("password")) return next()
 
-    this.password = bcrypt.hash(this.password,10)
+    this.password = await bcrypt.hash(this.password,10)
     next()  
 })
 userSchema.methods.isPasswordCorrect =async function (password) {
