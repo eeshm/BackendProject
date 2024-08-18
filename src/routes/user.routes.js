@@ -4,7 +4,7 @@ import {upload} from "../middlewares/multer.middleware.js"
 
 const router = Router()
 router.route("/register").post(
-    upload.fields([             //fields from multer
+    upload.fields([             //upload is multer middleware and fields from multer
         {
             name:"avatar",
             maxCount:1

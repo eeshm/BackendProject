@@ -4,6 +4,8 @@
 2.then in utils/index.js import dotenv(for importing all env variable at the start of file) and connection from db/index.js and use this with then and catch as it is async await function to run the connection.
 3.Then in utils/app.js we imported express, cors, cookieparser ,then defined cors configuration and its origin .Then we defined configuration of json files ,values from urls , and to save images and favicon temporarily if needed in public folder using static. We did all this using app.use(.use is used to setup middlewares and configuration)  
 4.then in same file we setup cookie-parser for securely accessing and storing cookies in browsers on which only server can perform crud operations on.
+5.For routes our flow in from app.js to user.router.js to function in user,controller.js
+6.Detailed steps in user.controller.js about creating user controller for registration.
 
 
  -->
