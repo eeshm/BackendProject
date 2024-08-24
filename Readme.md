@@ -11,4 +11,7 @@ Backend with javascript
 5.jsonwebtoken
 6.cloudinary -- file uploading
 7.Multer-middleware for handling file uploading
+8.Cookie-parser
+9. .env
+10.cors
  -->

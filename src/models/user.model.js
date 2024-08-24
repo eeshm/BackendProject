@@ -46,7 +46,6 @@ const userSchema = new Schema(
         },
         refreshToken:{
             type:String,
-
         }
     },
     {
@@ -55,7 +54,7 @@ const userSchema = new Schema(
 )
 
 
-//For password encryptio
+//For password encryption
 userSchema.pre("save",async function(next){              //we use pre hook from mongoose to apply something before doing something
     if(!this.isModified("password")) return next()
 
@@ -66,6 +65,8 @@ userSchema.methods.isPasswordCorrect =async function (password) {
    return await bcrypt.compare(password,this.password)
 }
 
+
+//all these methods like (isPasswordCorrect, generateAccessToken ) are defined by us in our schema and accessible using mongodb .
 userSchema.methods.generateAccessToken = function(){
     return jwt.sign({
         _id:this._id,
@@ -81,7 +82,7 @@ userSchema.methods.generateAccessToken = function(){
 }
 userSchema.methods.generateRefreshToken = function(){
     return jwt.sign({
-        _id:this._id       //payloadName:databaseName
+        _id:this._id,      //payloadName:databaseName
     },
         process.env.REFRESH_TOKEN_SECRET,
         {
