@@ -6,7 +6,7 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 
-const generateAccessAndRefreshTokens= async (userId) => {
+const generateAccessAndRefreshTokens = async (userId) => {
   try {
     const user = await User.findById(userId);
     const accessToken = user.generateAccessToken();
@@ -86,7 +86,7 @@ const registerUser = asyncHandler(async (req, res) => {
   const user = await User.create({
     //create from mongoose to pass a data entry
     fullName,
-    avatar: avatar.url,
+    avatar: avatar.url,  //this .url we get from cloudinary service
     coverImage: coverImage?.url || "",
     email,
     password,
@@ -196,42 +196,150 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
   if (!incomingRefreshToken) {
     throw new ApiError(401, "unauthorized request");
   }
-try { 
+  try {
     const decodedToken = jwt.verify(
       incomingRefreshToken,
       process.env.REFRESH_TOKEN_SECRET
     );
     const user = await User.findById(decodedToken?._id);
-  
+
     if (!user) {
       throw new ApiError(401, "Invalid refresh token");
     }
-  
+
     if (incomingRefreshToken !== user.refreshToken) {
       //user.refreshToken ---> saved refreshToken in user in generateAccessAndRefreshToken() function
       throw new ApiError(401, "Refresh token is expired or used");
     }
-  
+
     const options = {
       httpOnly: true,
       secure: true,
     };
-  
-    const{accessToken,newRefreshToken}= await generateAccessAndRefreshTokens(user._id);
-  
-    return res
-    .status(200)
-    .cookie("accessToken",accessToken,options)
-    .cookie("refreshToken",newRefreshToken,options)
-    .json(
-      new ApiResponse(200,
-        {accessToken,refreshToken:newRefreshToken},
-        "Access token refresh"
-      )
-    )
-} catch (error) {
-  throw new ApiError(401,error?.message || "Invalid refresh token")
-}
 
+    const { accessToken, newRefreshToken } =
+      await generateAccessAndRefreshTokens(user._id);
+
+    return res
+      .status(200)
+      .cookie("accessToken", accessToken, options)
+      .cookie("refreshToken", newRefreshToken, options)
+      .json(
+        new ApiResponse(
+          200,
+          { accessToken, refreshToken: newRefreshToken },
+          "Access token refresh"
+        )
+      );
+  } catch (error) {
+    throw new ApiError(401, error?.message || "Invalid refresh token");
+  }
 });
-export { registerUser, loginUser, logoutUser ,refreshAccessToken};
+
+const changeCurrentPassword = asyncHandler(async (req, res) => {
+  const { oldPassword, newPassword } = req.body;
+
+  const user = User.findById(req.user?._id); //we can request this req.user because before this we are using auth middlware in which it assings the user to req.user
+  const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
+
+  if (!isPasswordCorrect) {
+    throw new ApiError(400, "Invalid old password");
+  }
+
+  user.password = newPassword;
+  await user.save({ validateBeforeSave: false });
+
+  return res.status(200).json(new ApiResponse(200, {}, "Password"));
+});
+
+const getCurrentUser = asyncHandler(async (req, res) => {
+  return res
+    .status(200)
+    .json(new ApiResponse(200, req.user, "Current user fetched successfully")); //as this is used with auth middleware and user is already present in req.user
+});
+
+const updateAccountDetails = asyncHandler(async (req, res) => {
+  const { fullName, email } = req.body;
+
+  if (!fullName || !email) {
+    throw new ApiError(400, "All fields are required");
+  }
+
+  const user = User.findByIdAndUpdate(
+    req.user?._id,
+    {
+      $set: {
+        fullName: fullName,
+        email: email,
+      },
+    }, //this parameter is used to update the values
+    { new: true } //by this paramter updated fields are returned in findByIdAndUpdate() method
+  ).select("-password"); //to remove password field in req
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user, "Account details updated successfully"));
+});
+
+const updateUserAvatar = asyncHandler(async(req,res)=>{
+  const avatarLocalPath = req.file   // we got this req.file from multer middlware which we injected before this function in routes as same we did in registerUser
+  if(!avatarLocalPath){
+    throw new ApiError(400,"Avatar file is missing")
+  }
+  const avatar = await uploadOnCloudinary(avatarLocalPath)
+  
+  if(!avatar.url){  //this .url we get from cloudinary service (it is important to use .url while using cloudinary services to get the url to save to mongodb database )
+    throw new ApiError(400,"Error while uploading Avatar")
+  }
+
+  const user = await User.findByIdAndUpdate(
+    req.user?._id,
+    {
+     $set:{
+      avatar:avatar.url //it is important to use .url because what we get in return is an object but we only want to update url in mongodb as we defined it in our userSchema
+     }
+    },
+    {new:true}
+  ).select("-password")
+
+  return res
+  .status(200)
+  .json(new ApiResponse(200,user,"Updated Avatar"))
+})
+
+const updateUserCoverImage = asyncHandler(async(req,res)=>{
+  const coverImageLocalPath = req.file   // we got this req.file from multer middlware which we injected before this function in routes as same we did in registerUser
+  if(!coverImageLocalPath){
+    throw new ApiError(400,"Cover Iamge file is missing")
+  }
+  const coverImage = await uploadOnCloudinary(coverImageLocalPath)
+  
+  if(!coverImage.url){  //this .url we get from cloudinary service (it is important to use .url while using cloudinary services to get the url to save to mongodb database )
+    throw new ApiError(400,"Error while uploading Cover Image")
+  }
+
+  const user = await User.findByIdAndUpdate(
+    req.user?._id,
+    {
+     $set:{
+      coverImage:coverImage.url //it is important to use .url because what we get in return is an object but we only want to update url in mongodb as we defined it in our userSchema
+     }
+    },
+    {new:true}
+  ).select("-password")
+
+  return res
+  .status(200)
+  .json(new ApiResponse(200,user,"Cover Image updated"))
+})
+export {
+  registerUser,
+  loginUser,
+  logoutUser,
+  refreshAccessToken,
+  changeCurrentPassword,
+  getCurrentUser,
+  updateAccountDetails,
+  updateUserAvatar,
+  updateUserCoverImage
+};
