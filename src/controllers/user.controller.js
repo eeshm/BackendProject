@@ -3,8 +3,11 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { deleteFromCloudinary } from "../utils/cloudinary.js";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
+import { del } from "express/lib/application.js";
+import res from "express/lib/response.js";
 
 const generateAccessAndRefreshTokens = async (userId) => {
   try {
@@ -287,21 +290,24 @@ const updateUserAvatar = asyncHandler(async(req,res)=>{
     throw new ApiError(400,"Avatar file is missing")
   }
   const avatar = await uploadOnCloudinary(avatarLocalPath)
+
+  //functionality to delete the last file url
+  await deleteFromCloudinary(avatarLocalPath);
   
   if(!avatar.url){  //this .url we get from cloudinary service (it is important to use .url while using cloudinary services to get the url to save to mongodb database )
     throw new ApiError(400,"Error while uploading Avatar")
   }
-
+  
   const user = await User.findByIdAndUpdate(
     req.user?._id,
     {
-     $set:{
-      avatar:avatar.url //it is important to use .url because what we get in return is an object but we only want to update url in mongodb as we defined it in our userSchema
-     }
+      $set:{
+        avatar:avatar.url //it is important to use .url because what we get in return is an object but we only want to update url in mongodb as we defined it in our userSchema
+      }
     },
     {new:true}
   ).select("-password")
-
+  
   return res
   .status(200)
   .json(new ApiResponse(200,user,"Updated Avatar"))
@@ -310,14 +316,17 @@ const updateUserAvatar = asyncHandler(async(req,res)=>{
 const updateUserCoverImage = asyncHandler(async(req,res)=>{
   const coverImageLocalPath = req.file   // we got this req.file from multer middlware which we injected before this function in routes as same we did in registerUser
   if(!coverImageLocalPath){
-    throw new ApiError(400,"Cover Iamge file is missing")
+    throw new ApiError(400,"Cover Image file is missing")
   }
   const coverImage = await uploadOnCloudinary(coverImageLocalPath)
+  
+  //functionality to delete the last file url
+  await deleteFromCloudinary(coverImageLocalPath);
   
   if(!coverImage.url){  //this .url we get from cloudinary service (it is important to use .url while using cloudinary services to get the url to save to mongodb database )
     throw new ApiError(400,"Error while uploading Cover Image")
   }
-
+  
   const user = await User.findByIdAndUpdate(
     req.user?._id,
     {
@@ -332,6 +341,133 @@ const updateUserCoverImage = asyncHandler(async(req,res)=>{
   .status(200)
   .json(new ApiResponse(200,user,"Cover Image updated"))
 })
+ 
+//used mongodb aggregate pipelines 
+const getUserChannelProfile=asyncHandler(async(req,res)=>{
+  const {username} = req.params; //same as req.body  
+
+  if(!username?.trim()){
+    throw new ApiError(400,"Username is missing!")
+  }
+
+  //Aggregation pipelines
+  const channel = await User.aggregate([
+    {
+      $match:{
+        username:username?.toLowerCase()   //this will return only one outcome 
+      }
+    },
+    {
+      $lookup:{
+        from:"subscriptions",
+        localField:"_id",
+        foreignField:"channel",
+        as:"subscribers"
+      }
+    },
+    {
+      $lookup:{
+        from:"subscriptions",
+        localField:"_id",
+        foreignField:"subscriber",
+        as:"subscribedTo"
+      }
+    },
+    {
+      $addFields:{  
+        subscribersCount:{
+          $size:"$subscribers"  //we used $ sign in this because ($subscribers) is a field. We add $ sign to tell it a field. 
+        },
+        channelSubscribedToCount:{
+          $size:"$subscribedTo"
+        },
+        isSubscribed:{
+          $cond:{
+          if:{$in:[req.user?._id,"$subscribers.subscriber"]}, //We add $ sign to tell it a field in ($subscribers).
+          then:true,
+          else:false
+         } 
+         }          
+      }
+    },
+    {
+      $project:{
+        fullName:1,  //to display values, we add 1 flag
+        username:1,
+        subscribersCount:1,
+        channelSubscribedToCount:1,
+        isSubscribed:1,
+        avatar:1,
+        coverImage:1,
+        email:1
+      }
+     }
+  ])
+  
+  if (!channel?.length){
+    throw new ApiError(404,"Channel does not exists")
+  }
+
+  return res
+  .status(200)
+  .json(
+    new ApiResponse(200,channel[0],"User channel fetched successfully")
+  )
+})
+
+const getWatchHistory=asyncHandler(async(req,res)=>{
+  const user = await User.aggregate([
+    {
+      $match:{
+        _id:new mongoose.Types.ObjectId(req.user._id)
+      } 
+    },
+    {
+      $lookup:{
+         from:"videos",  //because in schemas every name gets converted to lowercase with 's' at the end
+         localField:"watchHistory",  
+         foreignField:"_id",
+         as:"watchHistory",
+         pipeline:[  //nested pipeline /sub-pipeline 
+          {
+            $lookup:{
+              from:"users",
+              localField:"owner",
+              foreignField:"_id",
+              as:"owner",
+              pipeline:[  //another sub-pipeline
+                {
+                  $project:{
+                    fullName:1,
+                    username:1,
+                    avatar:1
+                  }
+                },
+                {
+                  $addFields:{
+                    owner:{
+                      $first:"$owner"  //to get first element from array or we can use arrayElementsAt
+                    }
+                  }
+                }
+              ]
+            }
+          }
+         ]
+      }
+    }
+  ])
+
+  return res
+  .status(400)
+  .json(
+    new ApiResponse(200,user[0].watchHistory,
+      "Watch history fetched successfully!"
+    )
+  )
+})
+
+
 export {
   registerUser,
   loginUser,
@@ -341,5 +477,7 @@ export {
   getCurrentUser,
   updateAccountDetails,
   updateUserAvatar,
-  updateUserCoverImage
+  updateUserCoverImage,
+  getUserChannelProfile,
+  getWatchHistory,
 };
