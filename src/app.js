@@ -22,17 +22,10 @@ app.use(express.static("public")) //for storing images favicon in our public fol
 app.use(cookieParser())
 
  
-
-
-
-
-
 //routes import 
 import userRouter from './routes/user.routes.js'
 
-
 //routes declaration (using middleware using (app.use))
 app.use("/api/v1/users",userRouter)
-
 
 export { app }

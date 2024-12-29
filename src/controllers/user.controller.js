@@ -174,9 +174,12 @@ const logoutUser = asyncHandler(async (req, res) => {
   await User.findByIdAndUpdate(
     req.user._id, //we got this access of req.user from middleware from auth.middleware.js and then we passed that middlware in user.router.js and then we got its access.
     {
-      $set: {
-        refreshToken: undefined,
-      },
+      $unset: {
+        refreshToken: 1, //this removes the field from document
+      }
+    },
+    {
+      new:true
     }
   );
   const options = {
@@ -258,7 +261,9 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
 const getCurrentUser = asyncHandler(async (req, res) => {
   return res
     .status(200)
-    .json(new ApiResponse(200, req.user, "Current user fetched successfully")); //as this is used with auth middleware and user is already present in req.user
+    .json(new ApiResponse(200, 
+       req.user,
+       "Current user fetched successfully")); //as this is used with auth middleware and user is already present in req.user
 });
 
 const updateAccountDetails = asyncHandler(async (req, res) => {
