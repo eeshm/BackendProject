@@ -6,8 +6,6 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { deleteFromCloudinary } from "../utils/cloudinary.js";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
-import { del } from "express/lib/application.js";
-import res from "express/lib/response.js";
 
 const generateAccessAndRefreshTokens = async (userId) => {
   try {

@@ -1,17 +1,45 @@
-Backend with javascript 
+# VidStream
+A  backend project  for a video hosting and sharing platform, inspired by YouTube. VidStream includes core features like video uploads, user authentication, likes, dislikes, comments, subscriptions, and a unique capability to share videos as tweets.
 
 
 
 
-<!-- npm packages used:
-1.mongoose 
-2.express
-3.mongoose-aggregate-paginate-v2
-4.bcrypt -- for password encryption
-5.jsonwebtoken
-6.cloudinary -- file uploading
-7.Multer-middleware for handling file uploading
-8.Cookie-parser
-9. .env
-10.cors
- -->
+## Features
+### Authentication and Authorization
++ Secure user login and signup using hashed passwords.
++ Role-based access control for user-specific features.
+### Video Management
++ Video upload with file handling using Multer and cloud storage with Cloudinary.
++ CRUD operations for managing videos.
+### User Engagement
++ Like and dislike videos to express opinions.
++ Add, edit, and delete comments on videos.
+### Subscription System
++ Subscribe to channels for updates on new videos.
++ Unsubscribe from channels as needed.
+### Data Handling
++ Advanced data aggregation using MongoDB pipelines.
+### Controllers
++ Modular and scalable controllers for users, videos, comments, likes, and subscriptions.
+
+
+
+## Technologies Used
++ **Backend Framework:** Node.js, Express.js
++ **Database:** MongoDB, Mongoose
++ **File Handling:** Multer, Cloudinary
++ **Data Aggregation:** MongoDB Aggregation Pipelines
++ **Authentication:** JSON Web Tokens (JWT)
+
+
+## Prerequisites
++ Node.js (v16 or later)
++ MongoDB (local or cloud instance)
++ Cloudinary account for video storage
+
+
+## **Contributing**
+Contributions are welcome! Please fork this repository and submit a pull request with your changes.
+
+
+
